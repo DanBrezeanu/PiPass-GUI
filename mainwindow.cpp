@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "DeviceDetection.h"
+#include "LoadingScreen.h"
 
 #include <QLabel>
 #include <QMovie>
@@ -14,36 +15,32 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    statusBar()->hide();
+    this->setStyleSheet("background-color: #FFFFFF;");
 
 
-    QLabel *lbl = new QLabel(this);
-    QMovie *movie = new QMovie(":/gifs/loading-animation-300px.gif");
-    lbl->setFixedSize(200, 200);
-    movie->setScaledSize(lbl->size());
-    lbl->setMovie(movie);
+    startApplication();
 
-    movie->start();
-    this->setCentralWidget(lbl);
+}
 
-//    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-//    mainLayout->addWidget(lbl);
+void MainWindow::finishLoading(QString portName) {
+    loadingSplashScreen->deleteLater();
+}
 
-//    this->setCentralWidget(mainLayout);
-//    ui->->addWidget(newButton, rowNumber, colNumber);
+void MainWindow::startLoading() {
+    loadingSplashScreen = new LoadingScreen(this);
 
+    this->setCentralWidget(loadingSplashScreen);
+}
+
+void MainWindow::startApplication() {
+    startLoading();
 
     connect(&detection_thread, &DeviceDetection::deviceAttached, this, &MainWindow::finishLoading);
     connect(&detection_thread, &DeviceDetection::deviceDeattached, this, &MainWindow::startLoading);
     detection_thread.start();
 }
 
-void MainWindow::finishLoading(QString portName) {
-    qDebug() << portName;
-}
-
-void MainWindow::startLoading() {
-    qDebug() << "Device lost\n";
-}
 
 MainWindow::~MainWindow()
 {

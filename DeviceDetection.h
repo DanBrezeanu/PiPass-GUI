@@ -18,6 +18,7 @@ public:
     explicit DeviceDetection(QObject *parent = nullptr);
     void searchDevice();
     void checkDeviceAlive();
+    ~DeviceDetection();
 
 private:
     void run() override;

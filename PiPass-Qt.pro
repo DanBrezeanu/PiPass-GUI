@@ -10,11 +10,13 @@ CONFIG += c++11
 
 SOURCES += \
     DeviceDetection.cpp \
+    LoadingScreen.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     DeviceDetection.h \
+    LoadingScreen.h \
     mainwindow.h
 
 FORMS += \

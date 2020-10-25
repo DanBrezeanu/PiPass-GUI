@@ -56,3 +56,5 @@ void DeviceDetection::checkDeviceAlive()
         QThread::msleep(500);
     }
 }
+
+DeviceDetection::~DeviceDetection() {}

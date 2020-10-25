@@ -7,7 +7,10 @@
 #include <QString>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+    class MainWindow;
+    class LoadingScreen;
+}
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -21,9 +24,12 @@ public:
 private:
     Ui::MainWindow *ui;
     DeviceDetection detection_thread;
+    QWidget *loadingSplashScreen;
+    void startApplication();
 
 private slots:
     void finishLoading(QString portName);
     void startLoading();
+
 };
 #endif // MAINWINDOW_H
