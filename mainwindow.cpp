@@ -3,6 +3,9 @@
 
 #include "DeviceDetection.h"
 #include "LoadingScreen.h"
+#include "PasswordScreen.h"
+#include "DeviceConnection.h"
+#include "Command.h"
 
 #include <QLabel>
 #include <QMovie>
@@ -25,6 +28,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::finishLoading(QString portName) {
     loadingSplashScreen->deleteLater();
+
+    connection = new DeviceConnection(portName);
+
+    connect(connection, &DeviceConnection::askedForPassword, this, &MainWindow::showPasswordScreen);
+    connect(connection, &DeviceConnection::askedForPin, this, &MainWindow::showPinScreen);
+
+    connection->sendAppHello();
+
 }
 
 void MainWindow::startLoading() {
@@ -38,9 +49,43 @@ void MainWindow::startApplication() {
 
     connect(&detection_thread, &DeviceDetection::deviceAttached, this, &MainWindow::finishLoading);
     connect(&detection_thread, &DeviceDetection::deviceDeattached, this, &MainWindow::startLoading);
+
     detection_thread.start();
 }
 
+void MainWindow::showPasswordScreen() {
+    passwordScreen = new PasswordScreen(this);
+
+    connect(
+        passwordScreen,
+        SIGNAL(passwordEntered(QString)),
+        connection,
+        SLOT(sendPassword(QString))
+    );
+
+    this->setCentralWidget(passwordScreen);
+
+
+}
+
+void MainWindow::showPinScreen() {
+    passwordScreen = new PasswordScreen(this);
+
+    connect(
+        passwordScreen,
+        SIGNAL(passwordEntered(QString)),
+        connection,
+        SLOT(sendPin(QString))
+    );
+
+    this->setCentralWidget(passwordScreen);
+}
+
+//void MainWindow::hidePasswordScreen(QString password) {
+//    delete passwordScreen;
+
+//    connection->
+//}
 
 MainWindow::~MainWindow()
 {
