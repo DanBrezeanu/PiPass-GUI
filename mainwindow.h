@@ -27,6 +27,7 @@ private:
     DeviceDetection detection_thread;
     QWidget *loadingSplashScreen;
     QWidget *passwordScreen;
+    QWidget *waitingScreen;
     void startApplication();
 
     DeviceConnection *connection;
@@ -35,8 +36,12 @@ private slots:
     void finishLoading(QString portName);
     void startLoading();
 
+    void showWaitingScreen();
     void showPasswordScreen();
     void showPinScreen();
+
+    void showCredentialsScreen();
+
 
 };
 #endif // MAINWINDOW_H

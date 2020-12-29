@@ -14,6 +14,7 @@ SOURCES += \
     DeviceDetection.cpp \
     LoadingScreen.cpp \
     PasswordScreen.cpp \
+    WaitingScreen.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -23,6 +24,7 @@ HEADERS += \
     DeviceDetection.h \
     LoadingScreen.h \
     PasswordScreen.h \
+    WaitingScreen.h \
     mainwindow.h
 
 FORMS += \
@@ -34,4 +36,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    files.qrc \
     images.qrc
+
+DISTFILES += \
+    setPermissionsDevice.sh

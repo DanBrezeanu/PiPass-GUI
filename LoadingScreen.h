@@ -1,8 +1,6 @@
 #ifndef LOADINGSCREEN_H
 #define LOADINGSCREEN_H
 
-#include "ui_loadingscreen.h"
-
 #include <QWidget>
 #include <QLabel>
 #include <QMovie>

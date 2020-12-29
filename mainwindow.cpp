@@ -4,6 +4,7 @@
 #include "DeviceDetection.h"
 #include "LoadingScreen.h"
 #include "PasswordScreen.h"
+#include "WaitingScreen.h"
 #include "DeviceConnection.h"
 #include "Command.h"
 
@@ -31,6 +32,7 @@ void MainWindow::finishLoading(QString portName) {
 
     connection = new DeviceConnection(portName);
 
+    connect(connection, &DeviceConnection::helloReceived, this, &MainWindow::showWaitingScreen);
     connect(connection, &DeviceConnection::askedForPassword, this, &MainWindow::showPasswordScreen);
     connect(connection, &DeviceConnection::askedForPin, this, &MainWindow::showPinScreen);
 
@@ -51,6 +53,28 @@ void MainWindow::startApplication() {
     connect(&detection_thread, &DeviceDetection::deviceDeattached, this, &MainWindow::startLoading);
 
     detection_thread.start();
+}
+
+void MainWindow::showWaitingScreen() {
+    waitingScreen = new WaitingScreen(this);
+
+    connect(
+        connection,
+        SIGNAL(deviceAuthenticated()),
+        waitingScreen,
+        SLOT(finishedWaiting())
+    );
+
+    connect(
+        waitingScreen,
+        SIGNAL(waitingForAuthenticationEnded()),
+        this,
+        SLOT(showCredentialsScreen())
+    );
+
+
+    this->setCentralWidget(waitingScreen);
+
 }
 
 void MainWindow::showPasswordScreen() {
@@ -79,6 +103,13 @@ void MainWindow::showPinScreen() {
     );
 
     this->setCentralWidget(passwordScreen);
+}
+
+void MainWindow::showCredentialsScreen() {
+    waitingScreen->deleteLater();
+
+
+    qInfo() << "Im showing credentials";
 }
 
 //void MainWindow::hidePasswordScreen(QString password) {

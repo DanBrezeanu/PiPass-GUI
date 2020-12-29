@@ -11,8 +11,8 @@ class DeviceDetection: public QThread
     Q_OBJECT
 
 public:
-    static const quint16 VENDOR_ID  = 0x1133;
-    static const quint16 PRODUCT_ID = 0x0105;
+    static const quint16 VENDOR_ID  = 0x1D6B;
+    static const quint16 PRODUCT_ID = 0x0104;
 
 public:
     explicit DeviceDetection(QObject *parent = nullptr);

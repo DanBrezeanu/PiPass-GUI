@@ -37,7 +37,10 @@ public:
 
         static const uint8_t ASK_FOR_PASSWORD   = 0xCC;
         static const uint8_t ASK_FOR_PIN        = 0xCD;
+
+        static const uint8_t DEVICE_AUTHENTICATED = 0xCE;
     };
+
 
     class Code {
     public:

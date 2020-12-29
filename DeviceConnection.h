@@ -12,6 +12,9 @@ class DeviceConnection: public QObject
     Q_OBJECT
 public:
     DeviceConnection(QString portName);
+#ifdef Q_OS_LINUX
+    void setPermisssionsForSerialDevice(QString portName);
+#endif
 
     void sendAppHello();
 
@@ -34,8 +37,11 @@ public slots:
     void sendPin(QString pin);
 
 signals:
+    void helloReceived();
     void askedForPin();
     void askedForPassword();
+
+    void deviceAuthenticated();
 
 
 };

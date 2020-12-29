@@ -4,6 +4,10 @@
 #include <QSerialPortInfo>
 #include <QDebug>
 #include <QTime>
+#include <QFileDevice>
+#include <QFile>
+#include <QProcess>
+#include <QApplication>
 
 #include "Command.h"
 
@@ -11,6 +15,10 @@
 
 DeviceConnection::DeviceConnection(QString portName)
 {
+#ifdef Q_OS_LINUX
+    this->setPermisssionsForSerialDevice(portName);
+#endif
+
     serial = new QSerialPort();
     serial->setPortName(portName);
     serial->setBaudRate(QSerialPort::Baud9600);
@@ -27,6 +35,15 @@ DeviceConnection::DeviceConnection(QString portName)
     connect(serial, &QSerialPort::readyRead, this, &DeviceConnection::readAndDecodeData);
 }
 
+#ifdef Q_OS_LINUX
+void DeviceConnection::setPermisssionsForSerialDevice(QString portName) {
+    return; /** FIXME **/
+
+    if (QProcess::execute(QString("export SUDO_ASKPASS=/usr/bin/ssh-askpass && sudo -A chmod a+rw /dev/") + QString(portName)) < 0)
+        qDebug() << "Failed to run";
+}
+#endif
+
 void DeviceConnection::readAndDecodeData()
 {
    QByteArray data = serial->readAll();
@@ -40,6 +57,10 @@ void DeviceConnection::readAndDecodeData()
    }
 
    switch (this->cmd->getType()) {
+   case Command::Type::APP_HELLO:
+       if (this->cmd->getIsReply())
+           emit DeviceConnection::helloReceived();
+       break;
    case Command::Type::ASK_FOR_PASSWORD:
        if (!this->cmd->getIsReply())
            emit DeviceConnection::askedForPassword();
@@ -47,6 +68,10 @@ void DeviceConnection::readAndDecodeData()
    case Command::Type::ASK_FOR_PIN:
        if (!this->cmd->getIsReply())
            emit DeviceConnection::askedForPin();
+       break;
+   case Command::Type::DEVICE_AUTHENTICATED:
+       if (!this->cmd->getIsReply())
+           emit DeviceConnection::deviceAuthenticated();
        break;
    }
 
@@ -63,6 +88,7 @@ void DeviceConnection::sendCommand() {
     qint64 ret = serial->write(cmdBytes, DeviceConnection::PACKET_SIZE);
     qInfo() << ret;
 }
+
 
 void DeviceConnection::sendAppHello() {
     this->cmd = (new Command())
