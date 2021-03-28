@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/scripts">
-        <file>setPermissionsDevice.sh</file>
-    </qresource>
-</RCC>
