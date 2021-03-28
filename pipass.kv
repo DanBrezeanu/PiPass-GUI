@@ -1,0 +1,50 @@
+#:kivy 2.0.0
+
+<DeviceLoadingScreen>:
+    FloatLayout:
+        pos: root.x, root.y
+        size: root.width, root.height
+
+        Label:
+            # size_hint: .2, .7
+            halign: 'right'
+            text: 'Waiting for device to be connected...'
+            color: 0.53, 0.53, 0.53, 1
+
+        Image:
+            source: "Rolling-0.8s-84px.zip"
+            anim_delay: 0
+            mipmap: True
+            pos_hint: {'top': 0.7}
+            # allow_stretch: True
+
+<PinScreen>:
+    FloatLayout:
+        pos: root.x, root.y
+        size: root.width, root.height
+
+        BoxLayout:
+            orientation: 'vertical'
+            size: root.width / 2, root.height / 2
+            size_hint: None, None
+            pos_hint: {'center_x': .5, 'center_y': .5}
+
+            Label:
+                color: 0.53, 0.53, 0.53, 1
+                text: 'Enter the pin'
+                size_hint: None, None
+                size: 50, 50
+
+            TextInput:
+                size_hint: None, None
+                size: 50, 30
+                id: pin_text_input
+                password: True
+                multiline: False
+                focus: True
+                background_color: 0.53, 0.53, 0.53, 1
+                foreground_color: 1, 1, 1, 1
+                cursor_color: 1, 1, 1, 1
+            
+            #
+            #   color: 0.53, 0.53, 0.53, 1
