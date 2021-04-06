@@ -26,7 +26,9 @@ class Serial():
             if p.pid == 0x0105 and p.vid == 0x1133
         ]
     
-        self._serial = serial.Serial(ports[0].name, timeout=Serial.TIMEOUT)
+        self._serial = serial.Serial(ports[0].name, timeout=0, write_timeout=0)
+        self._serial.flush()
+        print("Out waiting: {}".format(self._serial.out_waiting))
 
         if not self._serial.is_open:
             raise Exception('Could not open serial port {}'.format(port_name))
@@ -34,9 +36,11 @@ class Serial():
         Serial._instance = self
 
     def check_for_input(self, callback):
-        data = self._serial.read(size=Serial.PACKET_SIZE)
-        if data:
-            callback(data)
+        if self._serial.in_waiting > 0:
+            data = self._serial.read(size=Serial.PACKET_SIZE)
+
+            if data:
+                callback(data)
 
     def write(self, data: Union[str, bytes]):
         self._serial.write(data)
@@ -44,6 +48,8 @@ class Serial():
 
     def close(self):
         if self._serial:
+            self._serial.flushInput()
+            self._serial.flushOutput()
             self._serial.close()
 
     @staticmethod
@@ -52,6 +58,9 @@ class Serial():
             return Serial()
 
         return Serial._instance
+
+    def is_open(self):
+        return self._serial.is_open
 
 class Connection:
     _instance = None
@@ -68,7 +77,7 @@ class Connection:
             cmd_type: None for cmd_type in Command.Types
         }
 
-        Clock.schedule_interval(
+        self.read_event = Clock.schedule_interval(
             lambda *args: self._serial.check_for_input(self._read_and_decode_data),
             1
         )
@@ -83,6 +92,8 @@ class Connection:
 
     def _read_and_decode_data(self, data: bytes):
         c = Command.from_bytes(data)
+
+        print('got {}'.format(c))
 
         if c.body['type'] == Command.Types.APP_HELLO and c.body['is_reply']:
             if self.callbacks[Command.Types.APP_HELLO]:
@@ -103,18 +114,23 @@ class Connection:
         self.send_command()
 
     def send_pin(self, pin: Union[str, bytes]):
+        print('have to send pin {}'.format(pin))
         self.command = Command(Command.Types.ASK_FOR_PIN, is_reply=False)
-        self.command.options = pin.encode('utf-8') if isinstance(pin, str) else pin
+        self.command.body['options'] = pin.deocde('ascii') if isinstance(pin, bytes) else pin
         self.send_command()
 
 
     def send_password(self, password: Union[str, bytes]):
         self.command = Command(Command.Types.ASK_FOR_PASSWORD, is_reply=False)
-        self.command.options = password.encode('utf-8') if isinstance(password, str) else password
+        self.command.body['options'] = password.encode('utf-8') if isinstance(password, str) else password
         self.send_command()
 
     def close(self):
+        Clock.unschedule(self.read_event)
         self._serial.close()
+
+    def is_open(self):
+        return self._serial.is_open()
 
     @staticmethod
     def get_instance():
@@ -124,6 +140,8 @@ class Connection:
         return Connection._instance
 
 class Command:
+    HEADER_SIZE = 4
+
     class Types(enum.Enum):
         NO_COMMAND = 0x00
         APP_HELLO = 0xB0
@@ -167,16 +185,13 @@ class Command:
     class EnumEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, enum.Enum):
-                return str(obj.value)
+                return int(obj.value)
             return json.JSONEncoder.default(self, obj)
 
     @staticmethod
     def parse_enums(d):
-        key = [enum_key for enum_key in Command.ENUMS if enum_key in d]
-        if key:
-            return ENUMS[key](d[key])
-        else:
-            return d
+        print(d)
+        return {k: (v if k not in Command.ENUMS else Command.ENUMS[k](v)) for k, v in d.items()}
 
     def __init__(
         self,
@@ -192,37 +207,59 @@ class Command:
             'options': ''
         }
 
-        self._crc = 0
+        self.header = {
+            'length': 0,
+            'crc': 0,
+        }
 
         self.update_crc()
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'Command':
+        print(data)
         cmd = cls()
-        cmd.body = data[:-2].decode()
+
+        cmd.header['length'], crc = struct.unpack('<HH', data[:Command.HEADER_SIZE])
+        
+        cmd.body = data[Command.HEADER_SIZE:cmd.header['length'] + Command.HEADER_SIZE].decode('ascii')
         cmd.body = json.loads(cmd.body, object_hook=Command.parse_enums)
         cmd.update_crc()
-        #TODO: try catch jsonerror
-        
-        crc = struct.unpack('<H', data[-2:])
 
-        if crc != cmd.crc:
+        print(cmd.body)
+
+        #TODO: try catch jsonerror
+        print (cmd.header['crc'])
+        print(crc)
+        if crc != cmd.header['crc']:
             #TODO ERROR
             print('CRC DOES NOT MATCH')
 
         return cmd
 
     def to_bytes(self) -> bytes:
-        data = json.dumps(self.body, cls=Command.EnumEncoder).encode()
+
+        print ('to_send: {}'.format(self.body))
+        data = b''
         self.update_crc()
-        data += struct.pack('<H', self.crc)
+
+        body_as_bytes = json.dumps(self.body, cls=Command.EnumEncoder).encode()
+        self.header['length'] = len(body_as_bytes)
+
+        print('len = {}'.format(self.header['length']))
+
+        data += struct.pack('<HH', self.header['length'], self.header['crc'])
+        data += body_as_bytes
         data += b'\x00' * (Serial.PACKET_SIZE - len(data))
+
+        print(data)
         
         return data
 
     @property
     def crc(self):
-        return self._crc
+        self.header['crc']
 
     def update_crc(self):
-        self._crc = sum(list(bytearray(json.dumps(self.body, cls=Command.EnumEncoder), encoding="utf-8"))) % ((1 << 16) - 1)
+        self.header['crc'] = sum(list(bytearray(json.dumps(self.body, cls=Command.EnumEncoder), encoding="ascii"))) % ((1 << 16) - 1)
+        if self.body['sender'] == Command.Senders.SENDER_PIPASS:
+            self.header['crc'] += 64
