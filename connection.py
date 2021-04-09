@@ -86,9 +86,11 @@ class Connection:
 
     def bind(self, on_receive=None, type=None):
         self.callbacks[type] = on_receive
+        return True
 
     def unbind(self, type):
         self.callbacks[type] = None
+        return True
 
     def _read_and_decode_data(self, data: bytes):
         c = Command.from_bytes(data)
@@ -100,8 +102,11 @@ class Connection:
                 self.callbacks[Command.Types.APP_HELLO](c.body.copy())
 
         elif c.body['type'] == Command.Types.ASK_FOR_PIN and c.body['is_reply']:
-            print(f"ASK FOR PIN  reply code = {c.body['reply_code']}")
-            print(c.body['auth_token'] if 'auth_token' in c.body else 'NO AUTH TOKEN') 
+            if c.body['reply_code'] == Command.Codes.SUCCESS and 'auth_token' in c.body:
+                self.auth_token = c.body['auth_token']
+        else:
+            if self.callbacks[c.body['type']] is not None:
+                self.callbacks[c.body['type']](c.body.copy())
 
     def send_command(self):
         if self.command is None:
@@ -119,10 +124,9 @@ class Connection:
         self.command.body['options'] = pin.deocde('ascii') if isinstance(pin, bytes) else pin
         self.send_command()
 
-
     def send_password(self, password: Union[str, bytes]):
-        self.command = Command(Command.Types.ASK_FOR_PASSWORD, is_reply=False)
-        self.command.body['options'] = password.encode('utf-8') if isinstance(password, str) else password
+        self.command = Command(Command.Types.ASK_FOR_PASSWORD, is_reply=True)
+        self.command.body['options'] = password.deocde('ascii') if isinstance(password, bytes) else password
         self.send_command()
 
     def close(self):

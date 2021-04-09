@@ -12,39 +12,120 @@
             color: 0.53, 0.53, 0.53, 1
 
         Image:
-            source: "Rolling-0.8s-84px.zip"
-            anim_delay: 0
+            source: "res/gifs/loading_wheel.zip"
+            anim_delay: 0.041
             mipmap: True
             pos_hint: {'top': 0.7}
             # allow_stretch: True
 
-<PinScreen>:
+<DeviceLockedScreen>:
     FloatLayout:
         pos: root.x, root.y
         size: root.width, root.height
 
+        Label:
+            # size_hint: .2, .7
+            halign: 'right'
+            text: 'The device is locked.'
+            pos_hint: {'top': 1.0}
+            color: 0.53, 0.53, 0.53, 1
+
+        Label:
+            # size_hint: .2, .7
+            halign: 'right'
+            text:  'Unlock the device and try again.'
+            pos_hint: {'top': 0.95}
+            color: 0.53, 0.53, 0.53, 1
+
+        Image:
+            id: locked_img
+            source: "res/img/locked.png"
+            mipmap: True
+            pos_hint: {'top': 0.9, 'right': 0.65}
+            size_hint: 0.3, 0.3
+            # allow_stretch: True
+
+        Button:
+            id: try_again_button
+            text: "Try again"
+            pos_hint: {'right': 0.65, 'top': 0.3}
+            size_hint: 0.3, 0.1
+
+<PinScreen>:
+    FloatLayout:
+        pos: root.x + root.width / 8 + 10, root.y + root.height / 4
+        size: root.width, root.height / 2
+        orientation: 'vertical'
+        # pos_hint: {'right': .2, 'center_y': 0.5}
+
+        Label:
+            color: 0.53, 0.53, 0.53, 1
+            text: 'Enter your PIN'
+            font_size: 25
+            pos_hint: {'top': .9, 'right': 0.83}
+
         BoxLayout:
-            orientation: 'vertical'
-            size: root.width / 2, root.height / 2
+            orientation: 'horizontal'
+            size: root.width, root.height / 2
             size_hint: None, None
-            pos_hint: {'center_x': .5, 'center_y': .5}
-
-            Label:
-                color: 0.53, 0.53, 0.53, 1
-                text: 'Enter the pin'
+            pos_hint: {'top': 0.4, 'right': 1}
+        
+            PinTextInput:
                 size_hint: None, None
-                size: 50, 50
-
-            TextInput:
-                size_hint: None, None
-                size: 50, 30
-                id: pin_text_input
+                size: 100, 100
+                id: pin_text_input_0
                 password: True
                 multiline: False
                 focus: True
-                background_color: 0.53, 0.53, 0.53, 1
+                background_color: 0.11, 0.11, 0.11, 1
+                font_size: 125
                 foreground_color: 1, 1, 1, 1
-                cursor_color: 1, 1, 1, 1
-            
-            #
-            #   color: 0.53, 0.53, 0.53, 1
+                cursor_color: 0.11, 0.11, 0.11, 1   
+                padding_x: [22, 0]
+                padding_y: [-2, 0]
+                focus: True
+
+            PinTextInput:
+                size_hint: None, None
+                size: 100, 100
+                id: pin_text_input_1
+                password: True
+                multiline: False
+                focus: True
+                background_color: 0.11, 0.11, 0.11, 1
+                font_size: 125
+                foreground_color: 1, 1, 1, 1
+                cursor_color: 0.11, 0.11, 0.11, 1   
+                padding_x: [22, 0]
+                padding_y: [-2, 0]
+                focus: False
+
+            PinTextInput:
+                size_hint: None, None
+                size: 100, 100
+                id: pin_text_input_2
+                password: True
+                multiline: False
+                focus: True
+                background_color: 0.11, 0.11, 0.11, 1
+                font_size: 125
+                foreground_color: 1, 1, 1, 1
+                cursor_color: 0.11, 0.11, 0.11, 1   
+                padding_x: [22, 0]
+                padding_y: [-2, 0]
+                focus: False
+
+            PinTextInput:
+                size_hint: None, None
+                size: 100, 100
+                id: pin_text_input_3
+                password: True
+                multiline: False
+                focus: True
+                background_color: 0.11, 0.11, 0.11, 1
+                font_size: 125
+                foreground_color: 1, 1, 1, 1
+                cursor_color: 0.11, 0.11, 0.11, 1   
+                padding_x: [22, 0]
+                padding_y: [-2, 0]
+                focus: False
