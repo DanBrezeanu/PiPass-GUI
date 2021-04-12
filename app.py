@@ -1,5 +1,5 @@
-from kivy.app import App
-from kivy.uix.image import Image
+from kivymd.app import MDApp as App
+from kivy.uix.image import Image, AsyncImage
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -11,10 +11,22 @@ from kivy.uix.label import Label
 from kivy.animation import Animation
 from kivy.uix.textinput import TextInput
 from kivy.factory import Factory
+from kivy.graphics.context_instructions import Color
+from kivy.graphics import Rectangle, Callback
+from kivy.properties import ListProperty, NumericProperty
+from kivy.metrics import dp
+from kivymd.uix.list import TwoLineAvatarListItem, ImageLeftWidget, IconLeftWidget
+from kivymd.uix.card import MDSeparator, MDCard
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.gridlayout import MDGridLayout
+from kivymd.uix.behaviors import RectangularElevationBehavior
+from kivymd.uix.textfield import MDTextField
 
 from connection import search_for_device, Connection, Command
 
 import traceback
+import favicon
+import functools
 
 from kivy.config import Config
 Config.set('graphics', 'width', '600')
@@ -195,7 +207,9 @@ class PinScreen(Screen):
             )
         
     def received_pin(self, reply):
-        pass
+        if reply['reply_code'] == Command.Codes.SUCCESS:
+            sm.add_widget(MainScreen(name='main_screen'))
+            sm.current = 'main_screen'
 
     def change_to_next_char(self, instance, value):
         instance.focus = False
@@ -216,12 +230,129 @@ class PinScreen(Screen):
             self.text_inputs[idx - 1].text = ''
             self.text_inputs[idx - 1].focus = True
 
+class BaseShadowWidget(Widget):
+    pass
+
+class ElevatedGridLayout(RectangularElevationBehavior, BaseShadowWidget, MDGridLayout):
+    pass
+
+                   
+class CredentialField(MDTextField):
+    def __init__(self, **kwargs):
+        self.encrypted = kwargs.pop('encrypted', False)
+        super().__init__(**kwargs)
+        self.font_name = './res/fonts/NotoSans-Regular.ttf'
+        self.password_mask = "●"
+        self.line_color_normal = App.get_running_app().theme_cls.accent_color
+        # self.hint_text = kwargs.get('hint_text', 'Field')
+        self.disabled = True
+
+        if self.encrypted:
+            self.text = self.hint_text or "_default_"
+            self.password = True
+            self.icon_right = 'eye-off'
+
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            if self.icon_right:
+                icon_x = (self.width + self.x) - (self._lbl_icon_right.texture_size[1]) - dp(8)
+                icon_y = self.center[1] - self._lbl_icon_right.texture_size[1] / 2
+                if self.mode == "rectangle":
+                    icon_y -= dp(4)
+                elif self.mode != 'fill':
+                    icon_y += dp(8)
+
+                if touch.pos[0] > icon_x and touch.pos[1] > icon_y:
+                    if self.password:
+                        self.icon_right = 'eye'
+                        self.password = False
+
+                    else:
+                        self.icon_right = 'eye-off'
+                        self.password = True
+
+                    # try to adjust cursor position
+                    cursor = self.cursor
+                    self.cursor = (0,0)
+                    Clock.schedule_once(functools.partial(self.set_cursor, cursor))
+        return super(CredentialField, self).on_touch_down(touch)
+
+    def set_cursor(self, pos, dt):
+        self.cursor = pos
+
+class MainScreen(Screen):
+    class Separator(Widget):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+            self.size_hint_y = None
+            self.height = 2
+            with self.canvas:
+                Color(rgba=[0.62, 0.18, 0.18, 1])
+                self.rect = Rectangle(pos=(0, self.center_y), size=(self.width, 2))
+                
+            self.bind(pos=self.update_rect, size=self.update_rect)
+
+        def update_rect(self, *args):
+            self.rect.pos = self.pos
+            self.rect.size = self.size
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # conn.bind(on_receive=self.received_load_credentials, type=Command.Types.LIST_CREDENTIALS)
+
+        # conn.send_list_credentials()
+        # self.add_credential("github", "https://github.com")
+        self.add_credential("stackoverflow", "")
+
+    def received_load_credentials(self, reply):
+        print(reply['options'])
+
+    @functools.lru_cache()
+    def get_credential_icon(self, url):
+        try:
+            return list(filter(lambda x: x.format in ['png', 'ico'], favicon.get(url)))[0].url
+        except:
+            return'./res/img/locked.png'
+
+    def add_credential(self, name=None, url=None):
+        icon_url = self.get_credential_icon(None)
+
+        entry = TwoLineAvatarListItem( text= "Google",
+                            secondary_text="google.com")
+
+        entry.add_widget(IconLeftWidget(icon="google"))
+        entry.bind(on_release=self.show_credential_details)
+
+        self.ids.credential_list.add_widget(MDSeparator())
+        self.ids.credential_list.add_widget(entry)
+
+
+    @functools.lru_cache()
+    def ask_for_credential_details(self, name):
+        return {'name': name, 'url': 'https://github.com', 'user': None, 'password': None}
+
+    def show_credential_details(self, instance):
+        details = self.ask_for_credential_details(instance.text)
+        self.ids.details_layout.clear_widgets()
+        for k,v in details.items():
+            self.ids.details_layout.add_widget(
+                CredentialField(hint_text=k, text=v or '', encrypted=(v is None))
+            )
+        
+
+
+
 
 class PiPassApp(App):
     def build(self):
         Window.bind(on_request_close=self.on_request_close)
+        self.theme_cls.primary_palette = 'Gray'
+        self.theme_cls.accent_palette = 'Red'
+        self.theme_cls.theme_style = 'Dark'
 
-        sm.add_widget(DeviceLoadingScreen(name='device_loading'))
+        sm.add_widget(MainScreen(name='main_screen'))
 
         return sm
 

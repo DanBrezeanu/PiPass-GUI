@@ -129,3 +129,131 @@
                 padding_x: [22, 0]
                 padding_y: [-2, 0]
                 focus: False
+                
+
+<BaseShadowWidget>
+    size_hint: None, None
+    size: 100, 100
+    elevation: 25
+    pos_hint: {'center_x': .5}
+
+<MainScreen>:
+
+
+    # Main layout
+    MDBoxLayout:
+        size: root.width, root.height
+        orientation: "vertical"
+
+        # Body
+        MDBoxLayout:
+            size_hint: 1.0, 0.9
+            orientation: "horizontal"
+            padding: [10, 10]
+
+            MDBoxLayout:
+                size_hint: 0.35, 1.0
+                orientation: "vertical"
+               
+                # Search
+                MDTextField:
+                    hint_text:"Search"
+                    multiline: False
+                    mode: "rectangle"
+                    size_hint_y: None
+                    size_hint_x: 0.9
+                    pos_hint: {"center_x": 0.5}
+
+                # Credentials list
+                ScrollView:
+                    size_hint: 1.0, 1.0
+                    do_scroll_x: False
+                    do_scroll_y: True
+                    pos_hint: {'top': 1.0}
+                    bar_color: 0.88, 0.88, 0.88, 1
+                    bar_width: 5
+                    scroll_distance: "120sp"
+                    scroll_wheel_distance: "120sp"
+                    
+
+                    MDList:
+                        id: credential_list
+                                         
+
+            # Credential information
+            MDBoxLayout:
+                size_hint: 0.65, 1.0
+                pos_hint: {'top': 1.0}
+                background_color: 0.88, 0.88, 0.88, 1
+                orientation: 'vertical'
+                padding: [self.width / 15, self.height / 20]
+                cols: 2
+                
+                MDLabel:
+                    text: "Information"
+                    font_size: 18
+                    size_hint: 0.5, 0.1
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.opposite_bg_normal
+                    
+
+                ElevatedGridLayout:
+                    id: details_layout
+                    size_hint: 1.0, 0.9
+                    # orientation: 'vertical'
+                    cols: 1
+                    padding: [10, 10]
+
+                    canvas.before:
+                        Color:
+                            rgba: app.theme_cls.bg_light
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+
+                    CredentialField:
+                        hint_text: 'Hello'
+                        text:"world"
+                        encrypted: False
+
+                    MDSeparator:
+
+
+                    
+
+                    
+                        
+                    # MDTextField:
+                    #     hint_text:"Search"
+                    #     multiline: False
+                    #     pos_hint: {'top': 1.0}
+                    # MDTextField:
+                    #     hint_text:"Search"
+                    #     multiline: False
+                    #     pos_hint: {'top': 1.0}
+                    # MDTextField:
+                    #     hint_text:"Search"
+                    #     multiline: False
+                    #     pos_hint: {'top': 1.0}
+                    # MDTextField:
+                    #     hint_text:"Search"
+                    #     multiline: False
+                    #     pos_hint: {'top': 1.0}
+                        
+
+                    
+
+    
+
+        # Footer
+        MDBoxLayout:
+            size_hint: 1.0, 0.1
+            pos_hint: {'top': 0.0}
+            background_color: 0.76, 0.76, 0.76, 1
+            orientation: 'horizontal'
+
+            Button:
+                text: "3"
+
+            Button:
+                text: "4"

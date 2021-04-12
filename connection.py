@@ -63,15 +63,28 @@ class Serial():
         return self._serial.is_open
 
 class Connection:
+    class Decorators:
+        @staticmethod
+        def send_command(func):
+            def wrap(self, *args, **kwargs):
+                func(self, *args, **kwargs)
+
+                if self.auth_token is not None:
+                    self.command.body['auth_token'] = self.auth_token
+
+                self._send_command()
+            return wrap
+
+
     _instance = None
 
     def __init__(self):
-        # if Connection._instance is not None:
-        #     raise Exception('Singleton Connection')
+        if Connection._instance is not None:
+            raise Exception('Singleton Connection')
 
         self._serial = Serial.get_instance()
         self.command = None
-        self.auth_token = None
+        self._auth_token = None
 
         self.callbacks = {
             cmd_type: None for cmd_type in Command.Types
@@ -83,6 +96,8 @@ class Connection:
         )
 
         Connection._instance = self
+
+   
 
     def bind(self, on_receive=None, type=None):
         self.callbacks[type] = on_receive
@@ -104,30 +119,43 @@ class Connection:
         elif c.body['type'] == Command.Types.ASK_FOR_PIN and c.body['is_reply']:
             if c.body['reply_code'] == Command.Codes.SUCCESS and 'auth_token' in c.body:
                 self.auth_token = c.body['auth_token']
+                self.callbacks[Command.Types.ASK_FOR_PIN](c.body.copy())
         else:
             if self.callbacks[c.body['type']] is not None:
                 self.callbacks[c.body['type']](c.body.copy())
+    
+    @property
+    def auth_token(self):
+        return self._auth_token
 
-    def send_command(self):
+    @auth_token.setter
+    def auth_token(self, value):
+        self._auth_token = value
+
+    def _send_command(self):
         if self.command is None:
             return
 
         self._serial.write(self.command.to_bytes())
-    
+
+    @Decorators.send_command
     def send_app_hello(self):
         self.command = Command(Command.Types.APP_HELLO)
-        self.send_command()
-
+    
+    @Decorators.send_command
     def send_pin(self, pin: Union[str, bytes]):
         print('have to send pin {}'.format(pin))
         self.command = Command(Command.Types.ASK_FOR_PIN, is_reply=False)
         self.command.body['options'] = pin.deocde('ascii') if isinstance(pin, bytes) else pin
-        self.send_command()
 
+    @Decorators.send_command
     def send_password(self, password: Union[str, bytes]):
         self.command = Command(Command.Types.ASK_FOR_PASSWORD, is_reply=True)
         self.command.body['options'] = password.deocde('ascii') if isinstance(password, bytes) else password
-        self.send_command()
+
+    @Decorators.send_command
+    def send_list_credentials(self):
+        self.command = Command(Command.Types.LIST_CREDENTIALS)
 
     def close(self):
         Clock.unschedule(self.read_event)
