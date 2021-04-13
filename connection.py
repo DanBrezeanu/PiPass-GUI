@@ -157,6 +157,11 @@ class Connection:
     def send_list_credentials(self):
         self.command = Command(Command.Types.LIST_CREDENTIALS)
 
+    @Decorators.send_command
+    def send_credential_details(self, name):
+        self.command = Command(Command.Types.CREDENTIAL_DETAILS)
+        self.command.body['options'] = name
+
     def close(self):
         Clock.unschedule(self.read_event)
         self._serial.close()
@@ -199,8 +204,9 @@ class Command:
 
         ASK_FOR_PASSWORD   = 0xCC
         ASK_FOR_PIN        = 0xCD
+        CREDENTIAL_DETAILS = 0xCE
 
-        DEVICE_AUTHENTICATED = 0xCE
+        DEVICE_AUTHENTICATED = 0xCF
 
     class Codes(enum.Enum):
         SUCCESS = 0x00
