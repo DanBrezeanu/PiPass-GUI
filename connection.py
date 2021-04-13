@@ -107,10 +107,14 @@ class Connection:
         self.callbacks[type] = None
         return True
 
+    def is_bound(self, type):
+        return (type in self.callbacks and self.callbacks[type] is not None)
+
     def _read_and_decode_data(self, data: bytes):
         c = Command.from_bytes(data)
 
-        print('got {}'.format(c))
+        print('got {}, callback '.format(c.body['type']), self.callbacks[c.body['type']])
+        
 
         if c.body['type'] == Command.Types.APP_HELLO and c.body['is_reply']:
             if self.callbacks[Command.Types.APP_HELLO]:
@@ -162,6 +166,14 @@ class Connection:
         self.command = Command(Command.Types.CREDENTIAL_DETAILS)
         self.command.body['options'] = name
 
+    @Decorators.send_command
+    def send_encrypted_field_value(self, credential_name, field_name):
+        self.command = Command(Command.Types.ENCRYPTED_FIELD_VALUE)
+        self.command.body['options'] = {
+            'credential_name': credential_name,
+            'field_name': field_name
+        }
+
     def close(self):
         Clock.unschedule(self.read_event)
         self._serial.close()
@@ -205,8 +217,9 @@ class Command:
         ASK_FOR_PASSWORD   = 0xCC
         ASK_FOR_PIN        = 0xCD
         CREDENTIAL_DETAILS = 0xCE
+        ENCRYPTED_FIELD_VALUE = 0xCF
 
-        DEVICE_AUTHENTICATED = 0xCF
+        DEVICE_AUTHENTICATED = 0xE0
 
     class Codes(enum.Enum):
         SUCCESS = 0x00

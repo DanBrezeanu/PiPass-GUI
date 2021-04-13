@@ -18,6 +18,8 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.behaviors import RectangularElevationBehavior
 from kivymd.uix.textfield import MDTextField
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import BaseRectangularButton
 
 from connection import search_for_device, Connection, Command
 from screens.device_loading_screen import DeviceLoadingScreen 
@@ -74,7 +76,7 @@ class PiPassApp(App):
         """Open the pop-up with the name"""
         box = MDBoxLayout(orientation='vertical')
         box.add_widget(MDLabel(text=text))
-        mybutton = MDButton(text='OK', size_hint=(1, 0.25))
+        mybutton = BaseRectangularButton(text='OK', size_hint=(1, 0.25))
         box.add_widget(mybutton)
         popup = Popup(title=title, content=box, size_hint=(None, None), size=(600, 300))
         mybutton.bind(on_release=self.stop)

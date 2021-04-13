@@ -18,7 +18,7 @@ class DeviceLoadingScreen(MDScreen):
             if self.app.connection is None:
                 self.app.connection = Connection()
                 self.app.connection.bind(self.received_hello, Command.Types.APP_HELLO)
-                self.app.connection.send_app_hello()
+                Clock.schedule_once(lambda *args: self.app.connection.send_app_hello(), 5)
         elif self.device_status == True and status == False:
             self.app.screen_manager.clear_widgets()
             self.app.screen_manager.add_widget(DeviceLoadingScreen(name='device_loading'))

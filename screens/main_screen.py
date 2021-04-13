@@ -27,7 +27,9 @@ class ElevatedGridLayout(RectangularElevationBehavior, BaseShadowWidget, MDGridL
 
 class CredentialField(MDTextField):
     def __init__(self, **kwargs):
+        self.app = App.get_running_app()
         self.encrypted = kwargs.pop('encrypted', False)
+        self.parent_credential = kwargs.pop('parent_credential', None)
         self.font_size = "12sp"
         self.font_size_hint_text = 12
         self.font_name = './res/fonts/NotoSans-Regular.ttf'
@@ -59,18 +61,33 @@ class CredentialField(MDTextField):
 
                 if touch.pos[0] > icon_x and touch.pos[1] > icon_y:
                     if self.password:
-                        self.icon_right = 'eye'
-                        self.password = False
-
+                        print(self.parent_credential, self.hint_text)
+                        if self.parent_credential and self.hint_text:
+                            self.app.connection.bind(
+                                on_receive=self.reveal_credential_info,
+                                type=Command.Types.ENCRYPTED_FIELD_VALUE
+                            )
+                            self.app.connection.send_encrypted_field_value(
+                                self.parent_credential,
+                                self.hint_text.lower()
+                            )
                     else:
-                        self.icon_right = 'eye-off'
+                        self.text = self.hint_text if self.hint_text else '_default_'
                         self.password = True
+                        self.icon_right = 'eye-off'
 
                     # try to adjust cursor position
                     cursor = self.cursor
                     self.cursor = (0,0)
                     Clock.schedule_once(functools.partial(self.set_cursor, cursor))
         return super(CredentialField, self).on_touch_down(touch)
+
+    def reveal_credential_info(self, reply):
+        print('in reveal credneital')
+        self.app.connection.unbind(Command.Types.ENCRYPTED_FIELD_VALUE)
+        self.text = reply['options']
+        self.icon_right = 'eye'
+        self.password = False
 
     def set_cursor(self, pos, dt):
         self.cursor = pos
@@ -122,13 +139,16 @@ class MainScreen(MDScreen):
 
 
     def ask_for_credential_details(self, instance):
-        self.app.connection.bind(on_receive=self.show_credential_details, type=Command.Types.CREDENTIAL_DETAILS)
-        self.app.connection.send_credential_details(instance.text)
-        
+        if not self.app.connection.is_bound(Command.Types.CREDENTIAL_DETAILS):
+            self.app.connection.bind(on_receive=self.show_credential_details, type=Command.Types.CREDENTIAL_DETAILS)
+            self.app.connection.send_credential_details(instance.text)
+            self._last_pressed_credential = instance
+            
     def show_credential_details(self, reply):
+        self.app.connection.unbind(Command.Types.CREDENTIAL_DETAILS)
         self.ids.details_layout.clear_widgets()
         for k,v in reply['options'].items():
-            cr = CredentialField(text=v or '', encrypted=(v is None), disabled=True)
+            cr = CredentialField(text=v or '', encrypted=(v is None), parent_credential=self._last_pressed_credential.text)
             cr.set_hint_text(k)
             self.ids.details_layout.add_widget(cr)
         
