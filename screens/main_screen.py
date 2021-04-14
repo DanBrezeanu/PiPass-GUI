@@ -103,8 +103,8 @@ class MainScreen(MDScreen):
 
 
     def received_load_credentials(self, reply):
-        for name in reply['options']:
-            self.add_credential(name, 'https://gitlab.com')
+        for credential in reply['options']:
+            self.add_credential(credential['name'], credential['url'])
 
     @functools.lru_cache()
     def get_credential_icon(self, url):
