@@ -11,11 +11,13 @@
             text: 'Waiting for device to be connected...'
             color: 0.53, 0.53, 0.53, 1
 
-        Image:
-            source: "res/gifs/loading_wheel.zip"
-            anim_delay: 0.041
-            mipmap: True
-            pos_hint: {'top': 0.7}
+        MDSpinner:
+            size_hint: None, None
+            size: dp(60), dp(60)
+            active: True
+            pos_hint: {'center_y': 0.2, 'center_x': 0.5}
+            line_width: dp(10)
+            color: 0.2, 0.13, 0.8, 1
             # allow_stretch: True
 
 <DeviceLockedScreen>:
@@ -137,9 +139,118 @@
     elevation: 25
     pos_hint: {'center_x': .5}
 
+<CredentialInformationBody>:
+    size_hint: 0.65, 1.0
+    pos_hint: {'top': 1.0}
+    background_color: 0.88, 0.88, 0.88, 1
+    orientation: 'vertical'
+    padding: [self.width / 15, self.height / 20]
+    cols: 2
+    
+    MDLabel:
+        text: "Information"
+        font_size: 18
+        size_hint: 0.5, 0.1
+        theme_text_color: "Custom"
+        text_color: app.theme_cls.opposite_bg_normal
+        
+
+    ElevatedGridLayout:
+        id: details_layout
+        size_hint: 1.0, 0.9
+        cols: 1
+        padding: [10, 10]
+
+        canvas.before:
+            Color:
+                rgba: app.theme_cls.bg_light
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+
+<AddCredentialBody>:
+    size_hint: 0.65, 1.0
+    pos_hint: {'top': 1.0}
+    background_color: 0.88, 0.88, 0.88, 1
+    orientation: 'vertical'
+    padding: [self.width / 15, self.height / 20]
+    cols: 1
+
+    MDLabel:
+        text: "Add Item"
+        font_size: 18
+        size_hint: 0.5, 0.1
+        theme_text_color: "Custom"
+        text_color: app.theme_cls.opposite_bg_normal
+
+    ElevatedGridLayout:
+        size_hint: 1.0, 0.9
+        cols: 1
+        padding: [10, 10]
+        
+
+        canvas.before:
+            Color:
+                rgba: app.theme_cls.bg_light
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        ScrollView:
+            size_hint: 1.0, 1.0
+            do_scroll_x: False
+            do_scroll_y: True
+            pos_hint: {'top': 1.0}
+            bar_color: 0.88, 0.88, 0.88, 1
+            bar_width: 5
+            
+
+            canvas.before:
+                Color:
+                    rgba: app.theme_cls.bg_light
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            MDGridLayout:
+                size_hint: 1.0, 0.9
+                cols: 1
+                size_hint_y: None
+                padding: [10, 5]
+                spacing: -dp(40)   
+
+                Label:
+                    text: 'Type'
+                    size_hint_y: None
+                    size_hint_x: None
+
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    col: 1
+
+                    TypeToggleButton:
+                        id: password_toggle
+                        text: "Password"
+                        on_press: root.change_to_password_form(self)
+
+                    TypeToggleButton:
+                        id: card_toggle
+                        text: "Card"
+                        on_state: root.change_to_card_form(self)
+
+                    TypeToggleButton:
+                        id: button_toggle
+                        text: "Other"
+                        on_state: root.change_to_password_form(self)
+
+                MDGridLayout:
+                    id: form_layout
+                    cols: 1
+
+                    spacing: -dp(50)                    
+
 <MainScreen>:
-
-
     # Main layout
     MDBoxLayout:
         size: root.width, root.height
@@ -147,6 +258,7 @@
 
         # Body
         MDBoxLayout:
+            id: body_layout
             size_hint: 1.0, 0.9
             orientation: "horizontal"
             padding: [10, 10]
@@ -177,82 +289,20 @@
                     
 
                     MDList:
-                        id: credential_list
-                                         
-
-            # Credential information
-            MDBoxLayout:
-                size_hint: 0.65, 1.0
-                pos_hint: {'top': 1.0}
-                background_color: 0.88, 0.88, 0.88, 1
-                orientation: 'vertical'
-                padding: [self.width / 15, self.height / 20]
-                cols: 2
-                
-                MDLabel:
-                    text: "Information"
-                    font_size: 18
-                    size_hint: 0.5, 0.1
-                    theme_text_color: "Custom"
-                    text_color: app.theme_cls.opposite_bg_normal
-                    
-
-                ElevatedGridLayout:
-                    id: details_layout
-                    size_hint: 1.0, 0.9
-                    cols: 1
-                    padding: [10, 10]
-
-                    canvas.before:
-                        Color:
-                            rgba: app.theme_cls.bg_light
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
-
-                    # CredentialField:
-                    #     hint_text: 'Hello'
-                    #     text:"world"
-                    #     encrypted: False
-
-                    # MDSeparator:
-
-
-                    
-
-                    
-                        
-                    # MDTextField:
-                    #     hint_text:"Search"
-                    #     multiline: False
-                    #     pos_hint: {'top': 1.0}
-                    # MDTextField:
-                    #     hint_text:"Search"
-                    #     multiline: False
-                    #     pos_hint: {'top': 1.0}
-                    # MDTextField:
-                    #     hint_text:"Search"
-                    #     multiline: False
-                    #     pos_hint: {'top': 1.0}
-                    # MDTextField:
-                    #     hint_text:"Search"
-                    #     multiline: False
-                    #     pos_hint: {'top': 1.0}
-                        
-
-                    
-
-    
+                        id: credential_list                                        
 
         # Footer
-        MDBoxLayout:
+        MDStackLayout:
+            id: footer_layout
             size_hint: 1.0, 0.1
             pos_hint: {'top': 0.0}
             background_color: 0.76, 0.76, 0.76, 1
-            orientation: 'horizontal'
+            orientation: 'tb-lr'
 
-            Button:
-                text: "3"
+            MDIconButton:
+                size_hint: 0.4, 1
+                icon: "plus"
+                font_size: 35
+                on_release: root.change_to_add_credential_body()
 
-            Button:
-                text: "4"
+            

@@ -4,10 +4,21 @@ from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.behaviors import RectangularElevationBehavior
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.screen import MDScreen
+from kivymd.uix.stacklayout import MDStackLayout
 from kivymd.uix.card import MDSeparator, MDCard
 from kivy.metrics import dp
 from kivy.clock import Clock
 from kivymd.uix.list import TwoLineAvatarListItem, ImageLeftWidget, IconLeftWidget
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.button import MDRectangleFlatButton, BaseFlatButton
+from kivy.uix.togglebutton import ToggleButtonBehavior, ToggleButton
+from kivy.uix.button import Button
+from screens.main_screen.components.body import CredentialInformationBody, AddCredentialBody
+from screens.main_screen.components.fields import CredentialField
+from screens.main_screen.components.footer import CredentialInformationFooter, AddCredentialFooter
+
+
 import functools
 
 from connection import Command
@@ -17,88 +28,32 @@ import glob
 import re
 
 
-
 class BaseShadowWidget(Widget):
     pass
 
 class ElevatedGridLayout(RectangularElevationBehavior, BaseShadowWidget, MDGridLayout):
     pass
 
-
-class CredentialField(MDTextField):
+class TypeToggleButton(ToggleButton):
     def __init__(self, **kwargs):
-        self.app = App.get_running_app()
-        self.encrypted = kwargs.pop('encrypted', False)
-        self.parent_credential = kwargs.pop('parent_credential', None)
-        self.font_size = "12sp"
-        self.font_size_hint_text = 12
-        self.font_name = './res/fonts/NotoSans-Regular.ttf'
-        self.font_name_hint_text = './res/fonts/NotoSans-Regular.ttf'
         super().__init__(**kwargs)
-        self.line_color_normal = App.get_running_app().theme_cls.accent_color
-        # self.hint_text = kwargs.get('hint_text', 'Field')
-        self.disabled = True
+        self.size_hint_y = None
+        self.size = 30, 30
+        self.group = "type"
 
-        if self.encrypted:
-            self.password_mask = "\u2022"
-            self.text = self.hint_text or "_default_"
-            self.password = True
-            self.icon_right = 'eye-off'
-
-    def set_hint_text(self, value):
-        self.hint_text = value.capitalize()
-
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            if self.icon_right:
-                icon_x = (self.width + self.x) - (self._lbl_icon_right.texture_size[1]) - dp(8)
-                icon_y = self.center[1] - self._lbl_icon_right.texture_size[1] / 2
-                if self.mode == "rectangle":
-                    icon_y -= dp(4)
-                elif self.mode != 'fill':
-                    icon_y += dp(8)
-
-                if touch.pos[0] > icon_x and touch.pos[1] > icon_y:
-                    if self.password:
-                        print(self.parent_credential, self.hint_text)
-                        if self.parent_credential and self.hint_text:
-                            self.app.connection.bind(
-                                on_receive=self.reveal_credential_info,
-                                type=Command.Types.ENCRYPTED_FIELD_VALUE
-                            )
-                            self.app.connection.send_encrypted_field_value(
-                                self.parent_credential,
-                                self.hint_text.lower()
-                            )
-                    else:
-                        self.text = self.hint_text if self.hint_text else '_default_'
-                        self.password = True
-                        self.icon_right = 'eye-off'
-
-                    # try to adjust cursor position
-                    cursor = self.cursor
-                    self.cursor = (0,0)
-                    Clock.schedule_once(functools.partial(self.set_cursor, cursor))
-        return super(CredentialField, self).on_touch_down(touch)
-
-    def reveal_credential_info(self, reply):
-        print('in reveal credneital')
-        self.app.connection.unbind(Command.Types.ENCRYPTED_FIELD_VALUE)
-        self.text = reply['options']
-        self.icon_right = 'eye'
-        self.password = False
-
-    def set_cursor(self, pos, dt):
-        self.cursor = pos
 
 class MainScreen(MDScreen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
-        self.app.connection.bind(on_receive=self.received_load_credentials, type=Command.Types.LIST_CREDENTIALS)
+        
+        self.body = CredentialInformationBody()
+        self.footer = MDStackLayout()
+        self.ids.body_layout.add_widget(self.body)
+        self.ids.footer_layout.add_widget(self.footer)
 
+        self.app.connection.bind(on_receive=self.received_load_credentials, type=Command.Types.LIST_CREDENTIALS)
         self.app.connection.send_list_credentials()
 
 
@@ -143,12 +98,38 @@ class MainScreen(MDScreen):
             self.app.connection.bind(on_receive=self.show_credential_details, type=Command.Types.CREDENTIAL_DETAILS)
             self.app.connection.send_credential_details(instance.text)
             self._last_pressed_credential = instance
+
+    def send_add_credential(self, *args):
+        if isinstance(self.footer, AddCredentialFooter) and isinstance(self.body, AddCredentialBody):
+            form_information = self.body.get_form_information()
+            self.app.connection.send_add_credential(form_information)
             
     def show_credential_details(self, reply):
         self.app.connection.unbind(Command.Types.CREDENTIAL_DETAILS)
-        self.ids.details_layout.clear_widgets()
+        self.change_to_information_body()
+
         for k,v in reply['options'].items():
             cr = CredentialField(text=v or '', encrypted=(v is None), parent_credential=self._last_pressed_credential.text)
             cr.set_hint_text(k)
-            self.ids.details_layout.add_widget(cr)
+            self.body.ids.details_layout.add_widget(cr)
+
+    def change_to_information_body(self):
+        self.ids.body_layout.remove_widget(self.body)
+        self.body = CredentialInformationBody()
+        self.ids.body_layout.add_widget(self.body)
+
+        self.ids.footer_layout.remove_widget(self.footer)
+        self.footer = CredentialInformationFooter()
+        self.ids.footer_layout.add_widget(self.footer)
+
+    def change_to_add_credential_body(self):
+        if isinstance(self.body, CredentialInformationBody):
+            self.ids.body_layout.remove_widget(self.body)
+            self.body = AddCredentialBody()
+            self.ids.body_layout.add_widget(self.body)
+
+            self.ids.footer_layout.remove_widget(self.footer)
+            self.footer = AddCredentialFooter(on_save=self.send_add_credential)
+            self.ids.footer_layout.add_widget(self.footer)
+
         

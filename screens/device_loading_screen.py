@@ -5,6 +5,8 @@ from kivymd.uix.screen import MDScreen
 from connection import search_for_device, Connection, Command
 from screens.pin_screen import PinScreen
 from screens.device_locked_screen import DeviceLockedScreen
+from screens.main_screen.main_screen import MainScreen 
+
 
 class DeviceLoadingScreen(MDScreen):
     def __init__(self, **kwargs):
@@ -29,9 +31,10 @@ class DeviceLoadingScreen(MDScreen):
     def received_hello(self, reply):
         self.app.connection.unbind(Command.Types.APP_HELLO)
 
+        # Change this
         if reply['options'] == '1':
-            self.app.screen_manager.add_widget(PinScreen(name='pin_screen'))
-            self.app.screen_manager.current = 'pin_screen'
+            self.app.screen_manager.add_widget(MainScreen(name='main_screen'))
+            self.app.screen_manager.current = 'main_screen'
         else:
             print("DEVICE LOCKED")
             self.app.screen_manager.add_widget(DeviceLockedScreen(name='locked_screen'))

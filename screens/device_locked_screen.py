@@ -62,8 +62,6 @@ class DeviceLockedScreen(MDScreen):
                 type=Command.Types.ASK_FOR_PASSWORD,
             )
 
-            
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

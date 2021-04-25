@@ -12,7 +12,7 @@ def search_for_device(callback=None):
     return callback(connected)
 
 class Serial():
-    PACKET_SIZE = 256
+    PACKET_SIZE = 1024
     TIMEOUT = 0.1
     _instance = None
 
@@ -174,6 +174,20 @@ class Connection:
             'field_name': field_name
         }
 
+    @Decorators.send_command
+    def send_add_credential(self, form_information):
+        self.command = Command(Command.Types.ADD_CREDENTIAL)
+        self.command.body['options'] = form_information.copy()
+
+        if form_information['type'] == 'password':
+            self.command.body['options']['type'] = 0
+        elif form_information['type'] == 'card':
+            self.command.body['options']['type'] = 1
+        else:
+            self.command.body['options']['type'] = 2
+
+        print(self.command.body['options'])
+
     def close(self):
         Clock.unschedule(self.read_event)
         self._serial.close()
@@ -218,6 +232,7 @@ class Command:
         ASK_FOR_PIN        = 0xCD
         CREDENTIAL_DETAILS = 0xCE
         ENCRYPTED_FIELD_VALUE = 0xCF
+        ADD_CREDENTIAL = 0xD0
 
         DEVICE_AUTHENTICATED = 0xE0
 
@@ -297,6 +312,7 @@ class Command:
         self.header['length'] = len(body_as_bytes)
 
         print('len = {}'.format(self.header['length']))
+        print('crc = {}'.format(self.header['crc']))
 
         data += struct.pack('<HH', self.header['length'], self.header['crc'])
         data += body_as_bytes
