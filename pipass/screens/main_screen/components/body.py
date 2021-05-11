@@ -23,9 +23,13 @@ class AddCredentialBody(MDBoxLayout):
         self.ids.form_layout.clear_widgets()
         self._fields = []
 
-        name_field = MultipleIconTextField(hint_text="Name", size_hint_y=None)
+        name_field = MultipleIconTextField(hint_text="Name", size_hint_y=None, can_be_encrypted=False)
         self.ids.form_layout.add_widget(name_field)
         self._fields.append(name_field)
+
+        username_field = MultipleIconTextField(hint_text="Username", size_hint_y=None)
+        self.ids.form_layout.add_widget(username_field)
+        self._fields.append(username_field)
 
         password_field = MultipleIconTextField(
             hint_text="Password",
@@ -37,7 +41,7 @@ class AddCredentialBody(MDBoxLayout):
         self.ids.form_layout.add_widget(password_field)
         self._fields.append(password_field)
 
-        url_field = MultipleIconTextField(hint_text="URL", size_hint_y=None)
+        url_field = MultipleIconTextField(hint_text="URL", size_hint_y=None, can_be_encrypted=False)
         self.ids.form_layout.add_widget(url_field)
         self._fields.append(url_field)
 

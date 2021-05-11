@@ -8,8 +8,8 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.button import MDTextButton
 from kivy.animation import Animation
 
-from connection import Command
-from screens.pin_screen import PinScreen
+from pipass.connection import Command
+from pipass.screens.pin_screen import PinScreen
 
 class DeviceLockedScreen(MDScreen):
     class PasswordPopup(Popup):

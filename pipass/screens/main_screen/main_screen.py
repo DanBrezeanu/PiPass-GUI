@@ -14,19 +14,18 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.button import MDRectangleFlatButton, BaseFlatButton
 from kivy.uix.togglebutton import ToggleButtonBehavior, ToggleButton
 from kivy.uix.button import Button
-from screens.main_screen.components.body import CredentialInformationBody, AddCredentialBody
-from screens.main_screen.components.fields import CredentialField
-from screens.main_screen.components.footer import CredentialInformationFooter, AddCredentialFooter
 
+from pipass.screens.main_screen.components.body import CredentialInformationBody, AddCredentialBody
+from pipass.screens.main_screen.components.fields import CredentialField
+from pipass.screens.main_screen.components.footer import CredentialInformationFooter, AddCredentialFooter
 
 import functools
-
-from connection import Command
 import favicon
 import requests
 import glob
 import re
 
+from pipass.connection import Command
 
 class BaseShadowWidget(Widget):
     pass

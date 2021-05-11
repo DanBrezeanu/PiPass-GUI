@@ -2,10 +2,10 @@ from kivy.clock import Clock
 from kivymd.app import MDApp as App
 from kivymd.uix.screen import MDScreen
 
-from connection import search_for_device, Connection, Command
-from screens.pin_screen import PinScreen
-from screens.device_locked_screen import DeviceLockedScreen
-from screens.main_screen.main_screen import MainScreen 
+from pipass.connection import search_for_device, Connection, Command
+from pipass.screens.pin_screen import PinScreen
+from pipass.screens.device_locked_screen import DeviceLockedScreen
+from pipass.screens.main_screen.main_screen import MainScreen 
 
 
 class DeviceLoadingScreen(MDScreen):

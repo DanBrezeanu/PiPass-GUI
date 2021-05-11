@@ -1,13 +1,15 @@
 from kivymd.app import MDApp as App
 from kivymd.uix.textfield import MDTextField
 from kivy.clock import Clock
-import functools
-from connection import Command
 from kivy.metrics import dp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.button import MDIconButton
+
 import random
 import string
+import functools
+
+from pipass.connection import Command
 
 class PasswordTextField(MDTextField):
     def __init__(self, **kwargs):
@@ -61,14 +63,15 @@ class PasswordTextField(MDTextField):
 class MultipleIconTextField(MDBoxLayout):
     def __init__(self, **kwargs):
         self.encrypted = kwargs.pop('encrypted', False)
+        self.can_be_encrypted = kwargs.pop('can_be_encrypted', True)
         icons = kwargs.pop('icons', [])
 
         self._is_password = kwargs.pop('is_password', False)
-        self.encrypted = self._is_password or self.encrypted
+        self.encrypted = (self._is_password or self.encrypted) and self.can_be_encrypted
 
         self._text_field = PasswordTextField(
             text=kwargs.pop('text', ''),
-            password=self.encrypted,
+            password=self._is_password,
         )
         self._text_field.hint_text = kwargs.pop('hint_text', '')
 
@@ -82,7 +85,7 @@ class MultipleIconTextField(MDBoxLayout):
             self._icon_buttons.append(MDIconButton(icon='refresh', on_release=self.generate_password))
         elif self.encrypted:
             self._icon_buttons.append(MDIconButton(icon='lock-outline', on_release=self.on_change_encryption_status))
-        else:
+        elif self.can_be_encrypted:
             self._icon_buttons.append(MDIconButton(icon='lock-open-variant-outline', on_release=self.on_change_encryption_status))
 
         for icon in self._icons:

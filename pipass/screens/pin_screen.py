@@ -2,8 +2,8 @@ from kivymd.app import MDApp as App
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.textfield import MDTextField
 
-from screens.main_screen.main_screen import MainScreen
-from connection import Command
+from pipass.screens.main_screen.main_screen import MainScreen
+from pipass.connection import Command
 
 class PinScreen(MDScreen):
 

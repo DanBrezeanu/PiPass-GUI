@@ -3,3 +3,7 @@ env/
 __pycache__/
 res/
 *.png/
+.buildozer
+buildozer.spec
+pipass.egg-info/
+icons.py
